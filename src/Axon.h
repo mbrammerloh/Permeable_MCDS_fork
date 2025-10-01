@@ -69,8 +69,6 @@ public:
     inline bool point_in_inflated_aabb(const Eigen::Vector3d& p,
                                    double d);
     void set_spheres(std::vector<Sphere> &spheres_to_add);
-    bool is_point_near_axon(const Eigen::Vector3d& p,
-                        double d);
     inline bool segment_aabb_intersect(const Eigen::Vector3d& p0,
                                    const Eigen::Vector3d& p1,
                                    const Box& box,
@@ -99,13 +97,12 @@ public:
                                            double& t_hit,   // in/out
                                            int max_iter);
     
-    double signed_distance_to_union(const Eigen::Vector3d& p, double margin);
     void set_prob_crossings(double step_length_pref);
     double minDistance(const Walker& w) const;
-    bool isPosInsideAxon(const Eigen::Vector3d& p, double margin);
+    bool isPosInsideAxon(const Eigen::Vector3d& p, double margin, const double& L);
     int occupancy_at_point(const Eigen::Vector3d& p,
                               double margin,
-                              const bool& isintra) const;
+                              const bool& isintra, const double & L) const;
     
 };
 

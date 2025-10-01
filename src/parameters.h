@@ -30,6 +30,7 @@ public:
     double sim_duration;                            /*!< simulation total time                                                      */
     bool write_traj;                                /*!< flag, write a traj file or not, binary format only                         */
     bool write_hit;                                 /*!< flag, write a hit file or not, binary format only                         */
+    bool write_location;                            /*!< flag, write the location of the walker at each time step                   */
     unsigned write_every_nth_step = 1; /*!< write every Nth step to scale down trajectory to relevant time scale for dMRI */
     bool write_txt;                                 /*!< flag, writes DWI output signals in .txt if True                            */
     bool write_bin;                                 /*!< flag, writes the output signal in binary format (True by default)          */
