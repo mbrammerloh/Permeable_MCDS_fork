@@ -48,6 +48,9 @@ public:
      */
     Axon();
 
+    Axon(Axon &&) = delete;
+    Axon &operator=(const Axon &) = default;
+    Axon &operator=(Axon &&) = delete;
     ~Axon();
 
     Axon(int id_,  Eigen::Vector3d begin_,Eigen::Vector3d end_ , double radius_){
