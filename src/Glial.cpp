@@ -382,7 +382,7 @@ inline bool Glial::raySphere(const Eigen::Vector3d& p0,
                       const Eigen::Vector3d& C,
                       double R,
                       double& t_enter,
-                      double& t_exit, const double& distance)
+                      double& t_exit)
 {
     // Solve ||(p0 - C) + t*dir||^2 = R^2  with a=1 (dir is unit)
     const Eigen::Vector3d oc = p0 - C;
@@ -468,7 +468,7 @@ bool Glial::checkCollision(const Walker& walker,
 
             double t0, t1;
             const double Rin = s->radius;            // ← same inflation here
-            if (!raySphere(p0, dir, s->P, Rin, t0, t1, L + Rpad)) return;
+            if (!raySphere(p0, dir, s->P, Rin, t0, t1)) return;
             if (t1 < t0) std::swap(t0, t1);
             if (t0 > L + Rpad) return;  // intersection beyond step end
             if (t0 >= 0) evs.push_back({std::min(L, std::max(0.0, t0)), +1, s});  // ENTER

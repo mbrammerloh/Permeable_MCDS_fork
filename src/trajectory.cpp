@@ -672,6 +672,7 @@ void Trajectory::closeHitReaderFile()
 
 void Trajectory::setTrajFile(std::string trajfile_)
 {
+
     trajfile = trajfile_  + ".traj";
     headerfile = trajfile_+ ".bhdr";
     readTrajectoryHeader();
