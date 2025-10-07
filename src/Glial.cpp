@@ -413,7 +413,7 @@ bool Glial::checkCollision(const Walker& walker,
     // Normalize direction
     const double L = (step_length > 0.0) ? step_length : step.norm();
     if (L <= 0.0) { 
-        assert(0);
+        cout <<"L : " << L << endl;
         collision.type = Collision::null; 
         return false; 
     }
@@ -705,6 +705,7 @@ bool Glial::checkCollision(const Walker& walker,
         std::uniform_real_distribution<double> U(0.0,1.0);
         const double p_cross = start_inside ? prob_cross_i_e : prob_cross_e_i;
         if (U(gen) < p_cross) {
+            cout <<" p_cross : " << p_cross << endl;
             collision.perm_crossing = p_cross;
             collision.bounced_direction = dir; // continue forward
         }
