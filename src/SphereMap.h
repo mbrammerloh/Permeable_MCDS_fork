@@ -1,9 +1,10 @@
-#include "CellProcess.h"
 #include "sphere.h"
 #include "parameters.h"
 #include <vector>
 #include <cstdint>
 #include <cstddef>
+#include "CellComponent.h"
+
 
 struct SphereIds {
     int neuron_id;
@@ -64,7 +65,7 @@ public:
     void reserve_entry(int x, int y, int z, std::size_t n_spheres);
 
     // Add cell process to SphereMap.
-    bool add_process(CellProcess& cell_process, int spine_index);
+    bool add_process(CellComponent& cell_process, int spine_index);
     
     // Add sphere object to SphereMap
     bool add_sphere(Sphere& sphere,  SphereIds& ids);

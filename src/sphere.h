@@ -18,8 +18,10 @@ class Sphere : public Obstacle
 public:
 
     int id;                 /*!< ID of the sphere       */
-    Eigen::Vector3d P;      /*!< Center of the sphere   */
+    Eigen::Vector3d center; /*!< Center of the sphere   */
     double radius;          /*!< Radius of the sphere   */
+    double inner_radius;    /*!< Inner radius of the sphere  (for myelin) */
+    double outer_radius;    /*!< Outer radius of the sphere (for myelin)  */
     double volume;
     int object_id;          /*!< ID of the object */
     int object_type;        /*!< Type of the object  (0 : axon, 1 : glial)   */
@@ -38,7 +40,7 @@ public:
      *  \param scale scale factor for the values passed. Useful when reading a file.
      *  \brief Initialize everything.
      */
-    Sphere(int id_, int object_id_, Eigen::Vector3d P_, double radius_, int object_type_, int branch_id_ = -1, double scale = 1):P(P_*scale), radius(radius_*scale){
+    Sphere(int id_, int object_id_, Eigen::Vector3d P_, double radius_, int object_type_, int branch_id_ = -1, double scale = 1):center(P_*scale), radius(radius_*scale){
         id = id_;
         object_id = object_id_;
         object_type = object_type_;

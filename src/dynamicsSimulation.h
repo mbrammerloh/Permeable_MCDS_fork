@@ -20,11 +20,12 @@
 #include "plyobstacle.h"
 #include "voxel.h"
 #include "cylinder.h"
-#include "Axon.h"
+#include "CellComponent.h"
 #include "Glial.h"
 #include "sentinel.h"
 #include "propagator.h"
 #include "sphere.h"
+#include "Substrate.h"
 
 
 /*! \class DynamicsSimulation
@@ -54,11 +55,12 @@ public:
     std::vector <Cylinder> cylinders_list;          /*!< vector with all the isntances of "Cylider" obstacles                       */
     std::vector<unsigned>  cylinders_deque;         /*!< deque with the indexes of the cylinders (used for optmization)             */
 
-    std::vector <Axon> axons_list;                  /*!< vector with all the isntances of "Axon" obstacles                       */
-    std::vector <Axon> inner_axons_list;            /*!< vector with all the isntances of "Axon" obstacles, in case of myelin                       */
+    std::vector <CellComponent> cell_process_list;                  /*!< vector with all the isntances of "Axon" obstacles                       */
+    std::vector <CellComponent> inner_cell_process_list;            /*!< vector with all the isntances of "Axon" obstacles, in case of myelin                       */
     std::vector<unsigned>  axons_deque;             /*!< deque with the indexes of the axons (used for optmization)             */
     std::vector <Glial> glials_list;                  /*!< vector with all the isntances of "Glial" obstacles                       */
     std::vector<unsigned>  glials_deque;             /*!< deque with the indexes of the glial cells (used for optmization)             */
+    std::vector<Substrate> substrates;
     int step_nbr;
 
     std::vector<std::vector<unsigned>> ply_deque;   /*!< deque with the indexes of the triangles of all ply's (used for opt)        */

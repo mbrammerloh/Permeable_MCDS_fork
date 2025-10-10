@@ -198,34 +198,34 @@ void DynamicsSimulation::initObstacleInformation(){
     //Axons list of index initialization
     int nbr_prints = 0;
     double null_prob = 0.0;
-    for(unsigned i= 0 ; i < axons_list.size();i++){
+    for(unsigned i= 0 ; i < cell_process_list.size();i++){
         axons_deque.push_back(i);
 
-        if(axons_list[i].percolation > 0.0){
+        if(cell_process_list[i].percolation > 0.0){
 
-            dse = sqrt(step_length_pref*axons_list[i].diffusivity_e);
-            dsi = sqrt(step_length_pref*axons_list[i].diffusivity_i);
+            dse = sqrt(step_length_pref*cell_process_list[i].diffusivity_e);
+            dsi = sqrt(step_length_pref*cell_process_list[i].diffusivity_i);
 
-            prob_cross_i_e = axons_list[i].percolation * dsi * 2. / 3. / axons_list[i].diffusivity_i;
-            prob_cross_e_i = axons_list[i].percolation * dse * 2. / 3. / axons_list[i].diffusivity_e; 
-            axons_list[i].prob_cross_e_i = prob_cross_e_i / (1.+ 0.5 * (prob_cross_e_i + prob_cross_i_e));
-            axons_list[i].prob_cross_i_e = prob_cross_i_e / (1.+ 0.5 * (prob_cross_e_i + prob_cross_i_e));
+            prob_cross_i_e = cell_process_list[i].percolation * dsi * 2. / 3. / cell_process_list[i].diffusivity_i;
+            prob_cross_e_i = cell_process_list[i].percolation * dse * 2. / 3. / cell_process_list[i].diffusivity_e; 
+            cell_process_list[i].prob_cross_e_i = prob_cross_e_i / (1.+ 0.5 * (prob_cross_e_i + prob_cross_i_e));
+            cell_process_list[i].prob_cross_i_e = prob_cross_i_e / (1.+ 0.5 * (prob_cross_e_i + prob_cross_i_e));
  
         }
     
     }
 
-    for(unsigned i= 0 ; i < inner_axons_list.size();i++){
+    for(unsigned i= 0 ; i < inner_cell_process_list.size();i++){
 
-        if(inner_axons_list[i].percolation > 0.0){
+        if(inner_cell_process_list[i].percolation > 0.0){
 
-            dse = sqrt(step_length_pref*inner_axons_list[i].diffusivity_e);
-            dsi = sqrt(step_length_pref*inner_axons_list[i].diffusivity_i);
+            dse = sqrt(step_length_pref*inner_cell_process_list[i].diffusivity_e);
+            dsi = sqrt(step_length_pref*inner_cell_process_list[i].diffusivity_i);
 
-            prob_cross_i_e = inner_axons_list[i].percolation * dsi * 2. / 3. / inner_axons_list[i].diffusivity_i;
-            prob_cross_e_i = inner_axons_list[i].percolation * dse * 2. / 3. / inner_axons_list[i].diffusivity_e; 
-            inner_axons_list[i].prob_cross_e_i = prob_cross_e_i / (1.+ 0.5 * (prob_cross_e_i + prob_cross_i_e));
-            inner_axons_list[i].prob_cross_i_e = prob_cross_i_e / (1.+ 0.5 * (prob_cross_e_i + prob_cross_i_e)); 
+            prob_cross_i_e = inner_cell_process_list[i].percolation * dsi * 2. / 3. / inner_cell_process_list[i].diffusivity_i;
+            prob_cross_e_i = inner_cell_process_list[i].percolation * dse * 2. / 3. / inner_cell_process_list[i].diffusivity_e; 
+            inner_cell_process_list[i].prob_cross_e_i = prob_cross_e_i / (1.+ 0.5 * (prob_cross_e_i + prob_cross_i_e));
+            inner_cell_process_list[i].prob_cross_i_e = prob_cross_i_e / (1.+ 0.5 * (prob_cross_e_i + prob_cross_i_e)); 
         }
     }
 
@@ -703,7 +703,7 @@ void DynamicsSimulation::initWalkerObstacleIndexes()
 
     for (unsigned i = 0 ; i < walker.axons_collision_sphere.list_size; i++ ){
         unsigned index = walker.axons_collision_sphere.collision_list->at(i);
-        float dist = float(axons_list[index].minDistance(walker));
+        float dist = float(cell_process_list[index].minDistance(walker));
         if (dist < walker.axons_collision_sphere.small_sphere_distance){
             walker.axons_collision_sphere.pushToSmallSphere(i);
 
@@ -863,7 +863,7 @@ void DynamicsSimulation::getAnIntraCellularPosition(Vector3d &intra_pos, int &ob
     std::uniform_real_distribution<double> udist(0,1);
 
 
-    if(axons_list.size() <=0 and inner_axons_list.size() <=0 and cylinders_list.size() <=0 and plyObstacles_list.size() <= 0 and spheres_list.size() <= 0 and glials_list.size() <= 0){
+    if(cell_process_list.size() <=0 and inner_cell_process_list.size() <=0 and cylinders_list.size() <=0 and plyObstacles_list.size() <= 0 and spheres_list.size() <= 0 and glials_list.size() <= 0){
         SimErrno::error("Cannot initialize intra-axonal walkers within the given substrate.",std::cout);
         SimErrno::error("There's no defined intra-axonal compartment (missing obstacles?)",std::cout);
         assert(0);
@@ -895,10 +895,10 @@ void DynamicsSimulation::getAnIntraCellularPosition(Vector3d &intra_pos, int &ob
         Vector3d pos_temp = {x,y,z};
 
         std::vector<int> expected_object_types;
-        if (inner_axons_list.size() > 0){
+        if (inner_cell_process_list.size() > 0){
             expected_object_types.push_back(0);
         }
-        else if (axons_list.size() > 0){
+        else if (cell_process_list.size() > 0){
             expected_object_types.push_back(0);
         }
         if (glials_list.size() > 0){
@@ -1028,7 +1028,7 @@ void DynamicsSimulation::updateWalkerObstacleIndexes(unsigned t_)
     for(unsigned i = 0 ; i < walker.axons_collision_sphere.big_sphere_list_end; i++ )
     {
         unsigned index = walker.axons_collision_sphere.collision_list->at(i);
-        double dist = axons_list[index].minDistance(walker);
+        double dist = cell_process_list[index].minDistance(walker);
 
         if (dist > walker.axons_collision_sphere.big_sphere_distance)
         {
@@ -1130,9 +1130,9 @@ bool DynamicsSimulation::isInsideCylinders(Vector3d &position, int &object_id, d
 bool DynamicsSimulation::isInsideAxons(Eigen::Vector3d &position, int &object_id, double distance_to_be_inside)
 {
     double max_step = max(step_lenght_intra, step_lenght_extra);
-    if (inner_axons_list.size() > 0) {
-        for (unsigned i = 0; i < inner_axons_list.size() ; i++){
-            bool isinside = inner_axons_list[i].isPosInsideAxon(position,  distance_to_be_inside, max_step);
+    if (inner_cell_process_list.size() > 0) {
+        for (unsigned i = 0; i < inner_cell_process_list.size() ; i++){
+            bool isinside = inner_cell_process_list[i].isPosInsideAxon(position,  distance_to_be_inside, max_step);
             if (isinside){
                 object_id = i;
                 return true;
@@ -1140,9 +1140,9 @@ bool DynamicsSimulation::isInsideAxons(Eigen::Vector3d &position, int &object_id
         }
     }
     else{
-        for (unsigned i = 0; i < axons_list.size() ; i++){
+        for (unsigned i = 0; i < cell_process_list.size() ; i++){
     
-            bool isinside = axons_list[i].isPosInsideAxon(position,  distance_to_be_inside, max_step);
+            bool isinside = cell_process_list[i].isPosInsideAxon(position,  distance_to_be_inside, max_step);
             if (isinside){
                 object_id = i;
                 return true;
@@ -1156,9 +1156,9 @@ bool DynamicsSimulation::isInsideAxons(Eigen::Vector3d &position, int &object_id
 bool DynamicsSimulation::isOutsideAxons(Eigen::Vector3d &position, int &object_id, double distance_to_be_inside)
 {
     double max_step = max(step_lenght_intra, step_lenght_extra);
-    for (unsigned i = 0; i < axons_list.size() ; i++){
+    for (unsigned i = 0; i < cell_process_list.size() ; i++){
  
-        bool isinside = axons_list[i].isPosInsideAxon(position,  distance_to_be_inside, max_step);
+        bool isinside = cell_process_list[i].isPosInsideAxon(position,  distance_to_be_inside, max_step);
         if (isinside){
             object_id = i;
             return false;
@@ -1293,7 +1293,7 @@ bool DynamicsSimulation::isInIntra(Vector3d &position, int &object_id, int& obje
 
     }
 
-    if (inner_axons_list.size()>0){
+    if (inner_cell_process_list.size()>0){
         isinside_axons = this->isInsideAxons(position, ax_id, distance_to_be_intra_ply);
         isIntra|= isinside_axons;
         if (isinside_axons){
@@ -1342,7 +1342,7 @@ bool DynamicsSimulation::isInExtra(Eigen::Vector3d &position,  double distance_t
 
     // cylinders/axons/spheres: ideally use the same distance-threshold idea for them too
     if (!cylinders_list.empty()) ok = ok && isOutsideCylinders(position, dummy, distance_to_be_intra_ply);
-    if (!axons_list.empty())     ok = ok && isOutsideAxons(position, dummy, distance_to_be_intra_ply);
+    if (!cell_process_list.empty())     ok = ok && isOutsideAxons(position, dummy, distance_to_be_intra_ply);
     if (!plyObstacles_list.empty()) ok = ok && !isInsidePLY(position, distance_to_be_intra_ply);
     if (!spheres_list.empty())      ok = ok && !isInsideSpheres(position, distance_to_be_intra_ply);
     if (!glials_list.empty())   ok = ok && !this->isInsideGlial(position, dummy, distance_to_be_intra_ply);
@@ -1764,19 +1764,19 @@ bool DynamicsSimulation::checkObstacleCollision(Vector3d &bounced_step,double &t
     }
 
     //For each Axon Obstacle
-    if ((axons_list).size()>0 || (inner_axons_list).size()>0){
+    if ((cell_process_list).size()>0 || (inner_cell_process_list).size()>0){
         // intra walkers
  
         if (walker.location== Walker::intra ){
 
             if (walker.in_obj_type == 0 && walker.in_obj_index != -1){
                 
-                if (inner_axons_list.size() > 0) {
+                if (inner_cell_process_list.size() > 0) {
     
-                    (inner_axons_list)[walker.in_obj_index].checkCollision(walker,bounced_step,tmax,collision_tmp);
+                    (inner_cell_process_list)[walker.in_obj_index].checkCollision(walker,bounced_step,tmax,collision_tmp);
                 }
                 else{
-                    (axons_list)[walker.in_obj_index].checkCollision(walker,bounced_step,tmax,collision_tmp);
+                    (cell_process_list)[walker.in_obj_index].checkCollision(walker,bounced_step,tmax,collision_tmp);
                 }
                 handleCollisions(collision,collision_tmp,max_collision_distance,walker.in_obj_index);   
 
@@ -1788,7 +1788,7 @@ bool DynamicsSimulation::checkObstacleCollision(Vector3d &bounced_step,double &t
             //for (unsigned int i = 0 ; i < (axons_list).size(); i++ ){
                 unsigned index = walker.axons_collision_sphere.collision_list->at(i);
                 //unsigned index = i;
-                (axons_list)[index].checkCollision(walker,bounced_step,tmax,collision_tmp);
+                (cell_process_list)[index].checkCollision(walker,bounced_step,tmax,collision_tmp);
                 handleCollisions(collision,collision_tmp,max_collision_distance,index);  
             }
         }

@@ -21,6 +21,7 @@
 #include "dynamicsSimulation.h"
 #include "scheme.h"
 
+using namespace std;
 
 /*! \class MCSimulation
  * \brief  Main implementation class. Incorporates the particle's dynamics and the data synthesis.
@@ -78,7 +79,7 @@ public:
     /*!
      *  Adds all the obstacles defined in the confiuration files.
      */
-    void iniObstacles();
+    void initObstacles();
 
     int str_dist(string s, string t);
 
@@ -89,6 +90,8 @@ private:
     void addAxonsObstaclesFromFiles();
 
     void addGlialsObstaclesFromFiles();
+
+    void addSubstatesFromFiles();
 
     void addPLYObstaclesFromFiles();
 

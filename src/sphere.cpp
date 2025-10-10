@@ -15,7 +15,7 @@ Sphere::~Sphere()
 Sphere::Sphere(const Sphere &sph)
 {
 
-    P               = sph.P;
+    center          = sph.center;
     radius          = sph.radius;
     id              = sph.id;
     volume          = sph.volume;
@@ -36,7 +36,7 @@ bool Sphere::checkCollision(Walker &walker, Eigen::Vector3d &step, double &step_
     //Origin of the ray
     Vector3d O;
     walker.getVoxelPosition(O);
-    Vector3d m = O - P;
+    Vector3d m = O - center;
 
     //distance to the sphere center.
     double distance_to_sphere = m.norm();
@@ -161,7 +161,7 @@ inline bool Sphere::handleCollition(Walker& walker, Collision &colision, Vector3
 
         /* For a sphere, normal direction is equal to colision point */
         //Normal point
-        Eigen::Vector3d normal = (colision.collision_point - P).normalized();
+        Eigen::Vector3d normal = (colision.collision_point - center).normalized();
 
         Eigen::Vector3d temp_step = step;
         elasticBounceAgainsPlane(walker.pos_v,normal,colision.t,temp_step);
@@ -179,7 +179,7 @@ double Sphere::minDistance(Walker &w){
     //Origin of the ray
     Vector3d O;
     w.getVoxelPosition(O);
-    Vector3d m = O - P;
+    Vector3d m = O - center;
     // minimum distance to the sphere center.
     double distance_to_sphere = m.norm();
 
@@ -191,7 +191,7 @@ double Sphere::minDistance(Walker &w){
 
 double Sphere::minDistance(Eigen::Vector3d O){
 
-    Vector3d m = O - P;
+    Vector3d m = O - center;
     // minimum distance to the sphere center.
     double distance_to_sphere = m.norm();
 

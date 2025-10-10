@@ -1,10 +1,15 @@
 #include "mcsimulation.h"
 #include <Eigen/Dense>
+#include "CellComponent.h"
+#include "Eigen/src/Core/Matrix.h"
+#include "Substrate.h"
 #include "simerrno.h"
 #include "pgsesequence.h"
 #include "pgsesequence_intervals.h"
 #include "gradientwaveform.h"
 #include <iostream>
+
+using namespace std;
 
 int MCSimulation::count =0;
 
@@ -91,7 +96,7 @@ MCSimulation::MCSimulation(Parameters& params_)
 void MCSimulation::startSimulation()
 {
 
-    iniObstacles();
+    initObstacles();
     // update number of walkers
     dynamicsEngine->params = params;
 
@@ -115,13 +120,15 @@ double MCSimulation::getExpectedFreeeDecay(unsigned i)
 }
 
 
-void MCSimulation::iniObstacles()
+void MCSimulation::initObstacles()
 {
     addCylindersObstaclesFromFiles();
 
     addAxonsObstaclesFromFiles();
 
     addGlialsObstaclesFromFiles();
+
+    addSubstatesFromFiles();
 
     addPLYObstaclesFromFiles();
 
@@ -218,7 +225,7 @@ double computeAreaICVF(Eigen::Vector3d min_limits, Eigen::Vector3d max_limits, s
     return AreaC / AreaV; // ( total axons volume / total volume )
 }
 
-double computeICVF(Eigen::Vector3d min_limits, Eigen::Vector3d max_limits, std::vector <Axon> axons)
+double computeICVF(Eigen::Vector3d min_limits, Eigen::Vector3d max_limits, std::vector <CellComponent> axons)
 {
     if (axons.size() == 0)
         return 0;
@@ -232,14 +239,14 @@ double computeICVF(Eigen::Vector3d min_limits, Eigen::Vector3d max_limits, std::
         {
             for (uint j = 1; j < axons[i].spheres.size(); j++)
             {
-                double l = (axons[i].spheres[j - 1].P - axons[i].spheres[j].P).norm(); // distance between centers
+                double l = (axons[i].spheres[j - 1].center - axons[i].spheres[j].center).norm(); // distance between centers
                 double mean_r = (axons[i].spheres[j - 1].radius + axons[i].spheres[j].radius) / 2;
 
-                if (withinBounds(min_limits, max_limits,axons[i].spheres[j].P, axons[i].spheres[j].radius) && withinBounds(min_limits, max_limits,axons[i].spheres[j-1].P, axons[i].spheres[j-1].radius))
+                if (withinBounds(min_limits, max_limits,axons[i].spheres[j].center, axons[i].spheres[j].radius) && withinBounds(min_limits, max_limits,axons[i].spheres[j-1].center, axons[i].spheres[j-1].radius))
                 {
                     AreaC += l * M_PI * mean_r * mean_r;
                 }
-                else if (withinBounds(min_limits, max_limits,axons[i].spheres[j].P, 0) && withinBounds(min_limits, max_limits,axons[i].spheres[j-1].P, 0))
+                else if (withinBounds(min_limits, max_limits,axons[i].spheres[j].center, 0) && withinBounds(min_limits, max_limits,axons[i].spheres[j-1].center, 0))
                 {
                     AreaC += l * M_PI * mean_r * mean_r/2;
                 }
@@ -374,8 +381,8 @@ void MCSimulation::addAxonsObstaclesFromFiles()
             // if the new line is from a different axon
             if (line_num !=0 and last_ax_id != cell_id){
                 // create the axon with id : last_ax_id
-                Axon ax (last_ax_id, {0.0,0.0,0.0}, {0.0,0.0,0.0}, rout);
-                Axon ax_in (last_ax_id, {0.0,0.0,0.0}, {0.0,0.0,0.0}, rin);
+                CellComponent ax (last_ax_id, {0.0,0.0,0.0}, {0.0,0.0,0.0}, rout);
+                CellComponent ax_in (last_ax_id, {0.0,0.0,0.0}, {0.0,0.0,0.0}, rin);
 
                 perm_ = params.axon_obstacle_permeability;
                 
@@ -413,8 +420,8 @@ void MCSimulation::addAxonsObstaclesFromFiles()
                     ax.setPercolation(perm_);
                 }
 
-                dynamicsEngine->inner_axons_list.push_back(ax_in);
-                dynamicsEngine->axons_list.push_back(ax);
+                dynamicsEngine->inner_cell_process_list.push_back(ax_in);
+                dynamicsEngine->cell_process_list.push_back(ax);
                 sphere_id = 0;
             }
             sphere_out = Sphere(sphere_id, cell_id, Eigen::Vector3d(x,y,z), rout, 0);
@@ -429,8 +436,8 @@ void MCSimulation::addAxonsObstaclesFromFiles()
         
         if (last_type.find("axon") != std::string::npos) {
             // add last sphere on last axon
-            Axon ax (last_ax_id, {0.0,0.0,0.0}, {0.0,0.0,0.0}, rout);
-            Axon ax_in (last_ax_id, {0.0,0.0,0.0}, {0.0,0.0,0.0}, rin);
+            CellComponent ax (last_ax_id, {0.0,0.0,0.0}, {0.0,0.0,0.0}, rout);
+            CellComponent ax_in (last_ax_id, {0.0,0.0,0.0}, {0.0,0.0,0.0}, rin);
 
             for (unsigned i = 0; i < spheres_out.size(); i++){
                 
@@ -466,22 +473,23 @@ void MCSimulation::addAxonsObstaclesFromFiles()
                 ax.setPercolation(perm_);
             }
 
-            dynamicsEngine->axons_list.push_back(ax);
-            dynamicsEngine->inner_axons_list.push_back(ax_in);
+            dynamicsEngine->cell_process_list.push_back(ax);
+            dynamicsEngine->inner_cell_process_list.push_back(ax_in);
 
         }
 
         if (params.ini_walker_flag == "intra") {
-            dynamicsEngine->axons_list.clear();
+            dynamicsEngine->cell_process_list.clear();
         }
         else if (params.ini_walker_flag == "extra") {
-            dynamicsEngine->inner_axons_list.clear();
+            dynamicsEngine->inner_cell_process_list.clear();
         }
 
         in.close();
         
     }
 }
+
 
 void MCSimulation::addGlialsObstaclesFromFiles()
 {
@@ -576,7 +584,197 @@ void MCSimulation::addGlialsObstaclesFromFiles()
 }
 
 
+void MCSimulation::addSubstatesFromFiles()
+{
+       for(unsigned i = 0; i < params.substrate_files.size(); i++){
 
+
+        std::ifstream in(params.substrate_files[i]);
+
+        if(!in){
+            return;
+        }
+
+        bool first=true;
+        for( std::string line; getline( in, line ); )
+        {
+            std::vector<std::string> jkr = split(line,' ');
+            if(first) {
+                if (jkr[0]!= "Cell_type" || 
+                    jkr[1]!= "Cell_ID" || 
+                    jkr[2]!= "Component" || 
+                    jkr[3]!= "Component_ID" || 
+                    jkr[4]!= "X" || 
+                    jkr[5]!= "Y" || 
+                    jkr[6]!= "Z" || 
+                    jkr[7]!= "Inner_radius" || 
+                    jkr[8]!= "Outer_radius") {
+                        cout << "Error, the csv has an unexpected format. Please provide columns Cell_type Cell_ID Component Component_ID X Y Z Inner_radius Outer_radius" << endl;
+                        break;
+                    }
+                first-=1;
+                continue;
+            }
+            if (jkr.size() != 9){
+                cout << "\033[1;33m[Warning]\033[0m Error, the csv has an unexpected format. Please provide columns Cell_type Cell_ID Component Component_ID X Y Z Inner_radius Outer_radius" << std::endl;
+            }
+            break;
+        }
+        in.close();
+
+        // Permeability file - if any
+        double perm_; 
+
+        std::ifstream in_perm;
+        if(params.substrate_permeability_files.size() >0){
+            in_perm.open(params.substrate_permeability_files[i]);
+        }
+
+        // Diffusion coefficients
+        double diff_i; 
+        double diff_e;
+
+        in.open(params.substrate_files[i]);
+        double x,y,z,rout, rin;
+        
+        Substrate current_substrate;
+        Cell current_cell;
+        CellComponent current_cell_component;
+        Sphere current_sphere;
+
+        int cell_id, component_id, last_cell_id=0, last_component_id = 0;
+        int cell_type_index = 0, component_type_index = 0;
+        string cell_type = "", component_type = "", last_cell_type ="",  last_component_type ="";
+        std::string header;
+
+
+        double null_perm = 0.0;
+        
+        int line_num = 0;
+
+        int header_size = 9;
+
+        for(unsigned j = 0; j < header_size; j++){  
+            in >>header;
+        } 
+
+        bool init = false;
+
+
+        while (in >> cell_type >> cell_id >> component_type >> component_id >> x >> y >> z >> rin >> rout){
+            // treat incoming values
+            // convert um to m
+            x = x/1000.0;
+            y = y/1000.0;
+            z = z/1000.0;
+            rout = rout/1000.0;
+            rin = rin/1000.0;
+            
+            // convert strings to int
+            cell_id = int(cell_id);
+            component_id = int(component_id);
+
+            if (rout!=rin){
+                cout << "Myelination not yet implemented, caution!" << endl;
+                break;
+            }
+
+            if (!init){
+                current_cell.component_type_to_index.insert({component_type, component_type_index});
+            }
+            
+            if (init){
+                // add a new cell component
+                if (
+                    component_id != last_component_id
+                    || component_type != last_component_type
+                ) {
+                    current_cell.components.push_back(current_cell_component);
+                    component_type_index ++; 
+                }
+                // add a new cell component type
+                if (component_type != last_component_type) {
+                    current_cell.component_types.push_back(last_component_type);
+                    current_cell.component_type_to_index.insert({component_type, component_type_index});
+                }
+                       
+                // add a new cell 
+                if (
+                    cell_id != last_cell_id
+                    || cell_type != last_cell_type
+                ) {
+                    current_substrate.cells.push_back(current_cell);
+                    cell_type_index ++; 
+                }
+                // add a new cell type 
+                if (cell_type != last_cell_type) {
+                    current_substrate.cell_types.push_back(cell_type);
+                    current_substrate.cell_type_to_index.insert({cell_type, cell_type_index});
+                }
+            }
+            
+            current_sphere.center = Eigen::Vector3d(x,y,z);
+            current_sphere.radius = rout;
+            current_cell_component.spheres.push_back(current_sphere);
+
+            init = true;
+
+            last_component_id = component_id;
+            last_component_type = component_type;
+
+            last_cell_id = cell_id;
+            last_cell_type = cell_type;
+            
+
+            /*if (component.find("soma") != std::string::npos) {
+                // Save previous glial cell if it exists
+                if (glial_initialized) {
+                    current_glial.setDiffusion(diff_i, diff_e);
+                    current_glial.setPercolation(perm_);
+                    current_glial.set_up_glialcell(current_processes);
+                    dynamicsEngine->glials_list.push_back(current_glial);
+                    current_processes.clear();
+                    sphere_id = 0;
+                }
+
+                Sphere soma(int(sphere_id), int(cell_id), Eigen::Vector3d(x, y, z), r, 1, int(component_id));
+                soma.setDiffusion(diff_i, diff_e);
+                soma.setPercolation(perm_);
+                current_glial = Glial(cell_id, soma);
+                current_glial.processes.clear();
+                glial_initialized = true;
+            } 
+            else if (component.find("branch") != std::string::npos) {
+                Sphere process(int(sphere_id), current_glial.id, Eigen::Vector3d(x, y, z), r, 1, int(component_id));
+                process.setDiffusion(diff_i, diff_e);
+                process.setPercolation(perm_);
+                current_processes.push_back(process);
+            }
+            sphere_id += 1;*/
+        }
+        /*
+        // Save the last glial cell, if any
+        if (glial_initialized) {
+            current_glial.setDiffusion(diff_i, diff_e);
+            current_glial.setPercolation(perm_);
+            current_glial.set_up_glialcell(current_processes);
+            dynamicsEngine->glials_list.push_back(current_glial);
+        }*/
+        
+        in.close();
+    
+    /*
+    // keep only first glial cell
+    if (dynamicsEngine->glials_list.size() > 2) {
+        std::cout << "\033[1;33m[Warning]\033[0m More than one glial cell found, keeping only the first one." << std::endl;
+        dynamicsEngine->glials_list.resize(2);
+    }
+    */
+    }
+    std::cout << "Number of substrates: " << dynamicsEngine->substrates.size() << std::endl;
+
+
+}
 
 void MCSimulation::addCylindersObstaclesFromFiles()
 {

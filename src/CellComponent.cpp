@@ -1,5 +1,4 @@
-#include "Axon.h"
-#include "Axon.h"
+#include "CellComponent.h"
 #include "Eigen/Dense"
 #include <Eigen/Geometry>
 #include <Eigen/Core>
@@ -18,13 +17,13 @@
 using namespace Eigen;
 using namespace std;
 
-Axon::Axon()
+CellComponent::CellComponent()
 {}
 
-Axon::~Axon()
+CellComponent::~CellComponent()
 {}
 
-Axon::Axon(const Axon &gl)
+CellComponent::CellComponent(const CellComponent &gl)
 {
     id = gl.id;
     spheres = gl.spheres;
@@ -41,10 +40,10 @@ Axon::Axon(const Axon &gl)
 };
 
 
-inline bool Axon::is_empty(const Box& b) {
+inline bool CellComponent::is_empty(const Box& b) {
     return b.x_min > b.x_max || b.y_min > b.y_max || b.z_min > b.z_max;
 }
-inline void Axon::extend(Box& b, const Eigen::Vector3d& p) {
+inline void CellComponent::extend(Box& b, const Eigen::Vector3d& p) {
     if (is_empty(b)) { b = {p.x(),p.x(),p.y(),p.y(),p.z(),p.z()}; return; }
     b.x_min = std::min(b.x_min, p.x()); b.x_max = std::max(b.x_max, p.x());
     b.y_min = std::min(b.y_min, p.y()); b.y_max = std::max(b.y_max, p.y());
@@ -57,7 +56,7 @@ inline uint64_t hash3(int x, int y, int z) {
                                v = (v^(v>>27))*0x94d049bb133111ebULL; return v^(v>>31); };
     return mix((uint64_t)(uint32_t)x) ^ (mix((uint64_t)(uint32_t)y)<<1) ^ (mix((uint64_t)(uint32_t)z)<<2);
 }
-void Axon::build_axon_grid_spheres(const std::vector<Sphere>& spheres_to_add,
+void CellComponent::build_axon_grid_spheres(const std::vector<Sphere>& spheres_to_add,
                                       double cell_size, double pad)
 {
 
@@ -82,8 +81,8 @@ void Axon::build_axon_grid_spheres(const std::vector<Sphere>& spheres_to_add,
     for (const auto& s : spheres) {
         if (s.radius <= 0.0) continue;
         const double R = s.radius + pad;
-        extend(B, s.P - Eigen::Vector3d::Constant(R));
-        extend(B, s.P + Eigen::Vector3d::Constant(R));
+        extend(B, s.center - Eigen::Vector3d::Constant(R));
+        extend(B, s.center + Eigen::Vector3d::Constant(R));
         // track global max radius+pad
         if (R > grid.max_radius_plus_pad){ 
             grid.max_radius_plus_pad = R;
@@ -103,8 +102,8 @@ void Axon::build_axon_grid_spheres(const std::vector<Sphere>& spheres_to_add,
         const Sphere& s = spheres[i];
         if (s.radius <= 0.0) return;
         const double R = s.radius + pad;
-        const Eigen::Vector3d mn = s.P - Eigen::Vector3d::Constant(R);
-        const Eigen::Vector3d mx = s.P + Eigen::Vector3d::Constant(R);
+        const Eigen::Vector3d mn = s.center - Eigen::Vector3d::Constant(R);
+        const Eigen::Vector3d mx = s.center + Eigen::Vector3d::Constant(R);
 
         const Eigen::Array3i imin = ((mn - grid.origin).array() / grid.cell).floor().cast<int>();
         const Eigen::Array3i imax = ((mx - grid.origin).array() / grid.cell).floor().cast<int>();
@@ -127,7 +126,7 @@ void Axon::build_axon_grid_spheres(const std::vector<Sphere>& spheres_to_add,
 
 }
 
-inline int Axon::neighbor_radius_cells(const HashGrid& G, double query_pad)
+inline int CellComponent::neighbor_radius_cells(const HashGrid& G, double query_pad)
 {
     // We need to cover centers as far as (max sphere radius + query_pad)
     const double max_sphere_radius = std::max(0.0, G.max_radius_plus_pad - G.build_pad);
@@ -135,7 +134,7 @@ inline int Axon::neighbor_radius_cells(const HashGrid& G, double query_pad)
     return std::max(1, (int)std::ceil(Rcover / G.cell));
 }
 
-inline bool Axon::point_in_inflated_aabb(const Eigen::Vector3d& p,
+inline bool CellComponent::point_in_inflated_aabb(const Eigen::Vector3d& p,
                                    double d)
 {
     Box box = grid.big_box;
@@ -145,7 +144,7 @@ inline bool Axon::point_in_inflated_aabb(const Eigen::Vector3d& p,
             p.z() >= box.z_min - infl && p.z() <= box.z_max + infl);
 }
 
-void Axon::set_spheres(std::vector<Sphere> &spheres_to_add) {
+void CellComponent::set_spheres(std::vector<Sphere> &spheres_to_add) {
 
     // Clear existing boxes and initialize variables
     spheres.clear();
@@ -175,7 +174,7 @@ void Axon::set_spheres(std::vector<Sphere> &spheres_to_add) {
 
 
 // Optional: segment vs AABB to clamp traversal to the grid big_box (slab method)
-inline bool Axon::segment_aabb_intersect(const Eigen::Vector3d& p0,
+inline bool CellComponent::segment_aabb_intersect(const Eigen::Vector3d& p0,
                                    const Eigen::Vector3d& p1,
                                    const Box& box,
                                    double& tEnter, double& tExit)
@@ -219,7 +218,7 @@ inline bool Axon::segment_aabb_intersect(const Eigen::Vector3d& p0,
 // - dir_unit: unit direction
 // - L: segment length (|step|)
 // - out_ids: candidate indices (into G.objs), deduplicated
-void Axon::gather_candidates_DDA(const Eigen::Vector3d& p0,
+void CellComponent::gather_candidates_DDA(const Eigen::Vector3d& p0,
                            const Eigen::Vector3d& dir_unit,
                            double L,
                            std::vector<int>& out_ids)
@@ -317,7 +316,7 @@ void Axon::gather_candidates_DDA(const Eigen::Vector3d& p0,
 
 // Return true if the segment p0 + t*dir_unit, t∈(0,L] intersects a sphere (C,R).
 // t_enter <= t_exit are clamped to [0, L].
-inline bool Axon::raySphere(const Eigen::Vector3d& p0,
+inline bool CellComponent::raySphere(const Eigen::Vector3d& p0,
                       const Eigen::Vector3d& dir_unit, // must be unit
                       const Eigen::Vector3d& C,
                       double R,
@@ -343,7 +342,7 @@ inline bool Axon::raySphere(const Eigen::Vector3d& p0,
     return true;
 }
 
-bool Axon::checkCollision(const Walker& walker,
+bool CellComponent::checkCollision(const Walker& walker,
                            Eigen::Vector3d& step,
                            const double& step_length,
                            Collision& collision)
@@ -384,14 +383,14 @@ bool Axon::checkCollision(const Walker& walker,
 
             double t0, t1;
             const double Rin = s->radius;
-            if (!raySphere(p0, dir, s->P, Rin, t0, t1)) return;
+            if (!raySphere(p0, dir, s->center, Rin, t0, t1)) return;
 
 
             // Ensure t0 <= t1 (if your raySphere doesn’t guarantee it)
             if (t1 < t0) std::swap(t0, t1);
 
 
-            const bool inside0 = (p0 - s->P).squaredNorm() <= (s->radius - Rpad)*(s->radius - Rpad) + 1e-12;
+            const bool inside0 = (p0 - s->center).squaredNorm() <= (s->radius - Rpad)*(s->radius - Rpad) + 1e-12;
             
             if (!inside0) {
                 evs.push_back({ t0, +1, s });
@@ -405,7 +404,7 @@ bool Axon::checkCollision(const Walker& walker,
 
             double t0, t1;
             const double Rin = s->radius;            // ← same inflation here
-            if (!raySphere(p0, dir, s->P, Rin, t0, t1)) return;
+            if (!raySphere(p0, dir, s->center, Rin, t0, t1)) return;
             if (t1 < t0) std::swap(t0, t1);
             if (t0 > L + Rpad) return;  // intersection beyond step end
 
@@ -543,7 +542,7 @@ bool Axon::checkCollision(const Walker& walker,
 
     const Eigen::Vector3d pos = p0 + t_hit * dir;
     
-    const Eigen::Vector3d n   = (pos - hit->s->P).normalized();
+    const Eigen::Vector3d n   = (pos - hit->s->center).normalized();
     const double dn = dir.dot(n);
     const Eigen::Vector3d bounced = dir - 2.0 * dn * n;
     /*
@@ -578,7 +577,7 @@ bool Axon::checkCollision(const Walker& walker,
 }
 
 
-int Axon::occupancy_at_point(const Eigen::Vector3d& p,
+int CellComponent::occupancy_at_point(const Eigen::Vector3d& p,
                               double margin,
                               const bool& isintra, const double& L) const
 {
@@ -629,14 +628,14 @@ int Axon::occupancy_at_point(const Eigen::Vector3d& p,
                 const double R = s.radius + m;
                 if (R <= 0.0) continue;
 
-                if ((p - s.P).squaredNorm() <= R*R) ++occ;
+                if ((p - s.center).squaredNorm() <= R*R) ++occ;
             }
         }
 
     return occ;
 }
 
-void Axon::set_prob_crossings(double step_length_pref){
+void CellComponent::set_prob_crossings(double step_length_pref){
 
     double prob_cross_i_e_, prob_cross_e_i_;
     double dse, dsi;
@@ -669,7 +668,7 @@ void Axon::set_prob_crossings(double step_length_pref){
 
 }
 
-double Axon::minDistance(const Walker& w) const
+double CellComponent::minDistance(const Walker& w) const
 {
     if (spheres.empty()) return std::numeric_limits<double>::infinity();
     const Box& box = grid.big_box;
@@ -689,7 +688,7 @@ double Axon::minDistance(const Walker& w) const
     double minimum = min(dist_x, min(dist_y, dist_z));
     return minimum;
 }
-bool Axon::isPosInsideAxon(const Eigen::Vector3d& p, double margin, const double& L) 
+bool CellComponent::isPosInsideAxon(const Eigen::Vector3d& p, double margin, const double& L) 
 {
     const double pad = std::max(0.0, margin);
 
@@ -714,7 +713,7 @@ bool Axon::isPosInsideAxon(const Eigen::Vector3d& p, double margin, const double
                 auto i = grid.objs[idx];
                 const Sphere& s = spheres[i];
                 const double R = s.radius + pad;
-                if ((p - s.P).squaredNorm() <= R*R + 1e-12) return true;
+                if ((p - s.center).squaredNorm() <= R*R + 1e-12) return true;
             }
         }
     return false;

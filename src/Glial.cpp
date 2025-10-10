@@ -80,8 +80,8 @@ void Glial::build_glia_grid_processes(const std::vector<std::vector<Sphere>>& pr
         for (const auto& s : branch) {
             if (s.radius <= 0.0) continue;
             const double R = s.radius + pad;
-            extend(B, s.P - Eigen::Vector3d::Constant(R));
-            extend(B, s.P + Eigen::Vector3d::Constant(R));
+            extend(B, s.center - Eigen::Vector3d::Constant(R));
+            extend(B, s.center + Eigen::Vector3d::Constant(R));
             // track global max radius+pad
             if (R > grid.max_radius_plus_pad){ 
                 grid.max_radius_plus_pad = R;
@@ -92,8 +92,8 @@ void Glial::build_glia_grid_processes(const std::vector<std::vector<Sphere>>& pr
     // Also extend by soma (helpful if processes are sparse/empty)
     {
         const double R = soma.radius + pad;
-        extend(B, soma.P - Eigen::Vector3d::Constant(R));
-        extend(B, soma.P + Eigen::Vector3d::Constant(R));
+        extend(B, soma.center - Eigen::Vector3d::Constant(R));
+        extend(B, soma.center + Eigen::Vector3d::Constant(R));
         if (R > grid.max_radius_plus_pad){
             grid.max_radius_plus_pad = R;
         }
@@ -102,8 +102,8 @@ void Glial::build_glia_grid_processes(const std::vector<std::vector<Sphere>>& pr
     // Fallback if still empty (degenerate case)
     if (is_empty(B)) {
         const double R = std::max(1e-6, soma.radius + pad);
-        const Eigen::Vector3d mn = soma.P - Eigen::Vector3d::Constant(R);
-        const Eigen::Vector3d mx = soma.P + Eigen::Vector3d::Constant(R);
+        const Eigen::Vector3d mn = soma.center - Eigen::Vector3d::Constant(R);
+        const Eigen::Vector3d mx = soma.center + Eigen::Vector3d::Constant(R);
         B = {mn.x(), mx.x(), mn.y(), mx.y(), mn.z(), mx.z()};
         grid.max_radius_plus_pad = std::max(grid.max_radius_plus_pad, R);
     }
@@ -124,8 +124,8 @@ void Glial::build_glia_grid_processes(const std::vector<std::vector<Sphere>>& pr
         const Sphere& s = processes[b][i];
         if (s.radius <= 0.0) return;
         const double R = s.radius + pad;
-        const Eigen::Vector3d mn = s.P - Eigen::Vector3d::Constant(R);
-        const Eigen::Vector3d mx = s.P + Eigen::Vector3d::Constant(R);
+        const Eigen::Vector3d mn = s.center - Eigen::Vector3d::Constant(R);
+        const Eigen::Vector3d mx = s.center + Eigen::Vector3d::Constant(R);
 
         const Eigen::Array3i imin = ((mn - grid.origin).array() / grid.cell).floor().cast<int>();
         const Eigen::Array3i imax = ((mx - grid.origin).array() / grid.cell).floor().cast<int>();
@@ -210,7 +210,7 @@ void Glial::set_up_glialcell(std::vector<Sphere> &spheres_to_add) {
 bool Glial::is_point_near_glia(const Eigen::Vector3d& p,
                         double d)
 {
-    if ((p - soma.P).squaredNorm() <= (soma.radius + d)*(soma.radius + d))
+    if ((p - soma.center).squaredNorm() <= (soma.radius + d)*(soma.radius + d))
         return true;
     if (!point_in_inflated_aabb(p, d)) return false;
 
@@ -226,7 +226,7 @@ bool Glial::is_point_near_glia(const Eigen::Vector3d& p,
           for (int idx : it->second) {
             auto [b, i] = grid.objs[idx];  // (branch_id, cell_id)
             const Sphere* s = &processes[b][i];
-            const Eigen::Vector3d v = p - s->P;
+            const Eigen::Vector3d v = p - s->center;
             if (v.squaredNorm() <= (s->radius + d)*(s->radius + d)) return true;
           }
         }
@@ -442,13 +442,13 @@ bool Glial::checkCollision(const Walker& walker,
 
             double t0, t1;
             const double Rin = s->radius;
-            if (!raySphere(p0, dir, s->P, Rin, t0, t1)) return;
+            if (!raySphere(p0, dir, s->center, Rin, t0, t1)) return;
 
 
             // Ensure t0 <= t1 (if your raySphere doesn’t guarantee it)
             if (t1 < t0) std::swap(t0, t1);
 
-            const bool inside0 = (p0 - s->P).squaredNorm() <= (s->radius - Rpad)*(s->radius - Rpad) + 1e-12;
+            const bool inside0 = (p0 - s->center).squaredNorm() <= (s->radius - Rpad)*(s->radius - Rpad) + 1e-12;
             
             if (!inside0) {
                 if (t0 < L + Rpad) {
@@ -468,7 +468,7 @@ bool Glial::checkCollision(const Walker& walker,
 
             double t0, t1;
             const double Rin = s->radius;            // ← same inflation here
-            if (!raySphere(p0, dir, s->P, Rin, t0, t1)) return;
+            if (!raySphere(p0, dir, s->center, Rin, t0, t1)) return;
             if (t1 < t0) std::swap(t0, t1);
             if (t0 > L + Rpad) return;  // intersection beyond step end
             if (t0 >= 0) evs.push_back({std::min(L, std::max(0.0, t0)), +1, s});  // ENTER
@@ -657,7 +657,7 @@ bool Glial::checkCollision(const Walker& walker,
 
     const Eigen::Vector3d pos = p0 + t_hit * dir;
     
-    const Eigen::Vector3d n   = (pos - hit->s->P).normalized();
+    const Eigen::Vector3d n   = (pos - hit->s->center).normalized();
     const double dn = dir.dot(n);
     const Eigen::Vector3d bounced = dir - 2.0 * dn * n;
 
@@ -731,7 +731,7 @@ int Glial::occupancy_at_point(const Eigen::Vector3d& p,
         const double R = soma.radius + m;
         if (R > 0.0) {
             const double R2 = R * R;
-            if ((p - soma.P).squaredNorm() <= R2) ++occ;
+            if ((p - soma.center).squaredNorm() <= R2) ++occ;
         }
     }
 
@@ -773,7 +773,7 @@ int Glial::occupancy_at_point(const Eigen::Vector3d& p,
                 const double R = s.radius + m;
                 if (R <= 0.0) continue;
 
-                if ((p - s.P).squaredNorm() <= R*R) ++occ;
+                if ((p - s.center).squaredNorm() <= R*R) ++occ;
             }
         }
 
@@ -829,7 +829,7 @@ void Glial::set_prob_crossings(double step_length_pref){
 
 double Glial::minDistance(const Walker& w) const
 {
-    double distance_soma = (w.pos_v - soma.P).norm() - soma.radius;
+    double distance_soma = (w.pos_v - soma.center).norm() - soma.radius;
     if (processes.empty()) {
         return distance_soma;
     }
@@ -857,7 +857,7 @@ bool Glial::isPosInsideGlialCell(const Eigen::Vector3d& p, double margin, const 
         const double Rs = soma.radius + margin;
         if (Rs > 0.0) {
             const double R2 = Rs * Rs;
-            if ((p - soma.P).squaredNorm() <= R2) {
+            if ((p - soma.center).squaredNorm() <= R2) {
                 return true;
             }
         }
@@ -900,7 +900,7 @@ bool Glial::isPosInsideGlialCell(const Eigen::Vector3d& p, double margin, const 
                     if (R <= 0.0) continue;
                     const double R2 = R * R;
 
-                    if ((p - s.P).squaredNorm() <= R2) {
+                    if ((p - s.center).squaredNorm() <= R2) {
                         return true;
                     }
                 }

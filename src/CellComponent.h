@@ -1,5 +1,5 @@
-#ifndef AXON_H
-#define AXON_H
+#ifndef CELLCOMPONENT_H
+#define CELLCOMPONENT_H
 
 #include "sphere.h"
 #include "obstacle.h"
@@ -9,7 +9,7 @@
 using namespace std;
 
 /// @brief 
-class Axon : public Obstacle
+class CellComponent : public Obstacle
 {
 public:
     int id;
@@ -46,14 +46,14 @@ public:
     /*!
      *  \brief Default constructor. Does nothing
      */
-    Axon();
+    CellComponent();
 
-    Axon(Axon &&) = delete;
-    Axon &operator=(const Axon &) = default;
-    Axon &operator=(Axon &&) = delete;
-    ~Axon();
+    CellComponent(CellComponent &&) = delete;
+    CellComponent &operator=(const CellComponent &) = default;
+    CellComponent &operator=(CellComponent &&) = delete;
+    ~CellComponent();
 
-    Axon(int id_,  Eigen::Vector3d begin_,Eigen::Vector3d end_ , double radius_){
+    CellComponent(int id_,  Eigen::Vector3d begin_,Eigen::Vector3d end_ , double radius_){
 
         id = id_;
         begin = begin_;
@@ -62,7 +62,7 @@ public:
         //projections.clear_projections();
         radius = radius_;
     }
-    Axon(Axon const &ax);
+    CellComponent(CellComponent const &ax);
 
     inline bool is_empty(const Box& b);
     inline void extend(Box& b, const Eigen::Vector3d& p);

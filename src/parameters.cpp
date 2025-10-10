@@ -456,6 +456,10 @@ void Parameters::readObstacles(ifstream& in)
             readGlialList(in);
             num_obstacles++;
         }
+        if(str_dist(tmp,"<substrate_list>") <= 2){
+            readSubstrateList(in);
+            num_obstacles++;
+        }
         if(str_dist(tmp,"oriented_cylinders_list") <= 2){
             string path;
             in >> path;
@@ -1044,3 +1048,25 @@ void Parameters::readGlialList(std::ifstream& in)
         }
     }  
 }
+
+void Parameters::readSubstrateList(std::ifstream& in)
+{
+    string path;
+    in >> path;
+    substrate_files.push_back(path);
+
+    string tmp="";
+    while(!(str_dist(tmp,"</substrate_list>") <= 2)){
+        in >> tmp;
+        std::transform(tmp.begin(), tmp.end(), tmp.begin(), ::tolower);
+        if (str_dist(tmp,"global") <= 2){
+            in >> substrate_obstacle_permeability;
+        } 
+        else if (str_dist(tmp,"local") <= 2){
+            string path;
+            in >> path;
+            substrate_permeability_files.push_back(path);
+        }
+    }  
+}
+

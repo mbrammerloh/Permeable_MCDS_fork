@@ -1,6 +1,6 @@
 #include "SphereMap.h"
 #include "sphere.h"
-#include "CellProcess.h"
+#include "CellComponent.h"
 
 #include <algorithm>
 #include <cassert>
@@ -138,13 +138,14 @@ bool SphereMap::add_sphere(Sphere& sphere,  int neuron_id, int dendrite_id, int 
 }
 
 
-bool SphereMap::add_process(CellProcess& cell_process, int spine_index){
+bool SphereMap::add_process(CellComponent& cell_process, int spine_index){
     bool success = true;
     SphereIds sph_ids;
-    sph_ids.neuron_id = cell_process.neuron_id;
-    sph_ids.dendrite_id = cell_process.dendrite_id;
+    // these three lines are currently creating errors, needed later on 
+    //sph_ids.neuron_id = cell_process.neuron_id;
+    //sph_ids.dendrite_id = cell_process.dendrite_id;
     sph_ids.spine_index = spine_index;
-    sph_ids.subbranch_id = cell_process.subbranch_id;
+    //sph_ids.subbranch_id = cell_process.subbranch_id; 
 
     for (uint i = 0; i < cell_process.spheres.size(); i++){
         sph_ids.sphere_id = i;
