@@ -17,6 +17,8 @@ Sphere::Sphere(const Sphere &sph)
 
     center          = sph.center;
     radius          = sph.radius;
+    inner_radius    = sph.inner_radius;
+    outer_radius    = sph.outer_radius;
     id              = sph.id;
     volume          = sph.volume;
     object_id       = sph.object_id;

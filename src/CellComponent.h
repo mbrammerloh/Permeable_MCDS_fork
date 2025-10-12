@@ -9,12 +9,12 @@
 using namespace std;
 
 /// @brief 
-class CellComponent : public Obstacle
+class CellComponent: public Obstacle
 {
 public:
     int id;
     std::vector<Sphere> spheres;
-    double radius;
+    double radius; // why???? a cell component is not a sphere, why does it have a radius itself? get rid if possible
     Eigen::Vector3d begin;
     Eigen::Vector3d end;
     
@@ -50,7 +50,7 @@ public:
 
     CellComponent(CellComponent &&) = delete;
     CellComponent &operator=(const CellComponent &) = default;
-    CellComponent &operator=(CellComponent &&) = delete;
+    //CellComponent &operator=(CellComponent &&) = delete;
     ~CellComponent();
 
     CellComponent(int id_,  Eigen::Vector3d begin_,Eigen::Vector3d end_ , double radius_){

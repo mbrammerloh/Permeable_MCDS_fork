@@ -14,3 +14,4 @@ int Cell::getComponentTypeIndex(
 ){
     return component_type_to_index[component_type] + component_index;
 }
+

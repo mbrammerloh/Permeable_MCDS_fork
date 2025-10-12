@@ -586,8 +586,7 @@ void MCSimulation::addGlialsObstaclesFromFiles()
 
 void MCSimulation::addSubstatesFromFiles()
 {
-       for(unsigned i = 0; i < params.substrate_files.size(); i++){
-
+    for(unsigned i = 0; i < params.substrate_files.size(); i++){
 
         std::ifstream in(params.substrate_files[i]);
 
@@ -644,12 +643,12 @@ void MCSimulation::addSubstatesFromFiles()
 
         int cell_id, component_id, last_cell_id=0, last_component_id = 0;
         int cell_type_index = 0, component_type_index = 0;
+        int component_counter = 0, cell_counter = 0; // these variables count the number of components/cells of a type
         string cell_type = "", component_type = "", last_cell_type ="",  last_component_type ="";
         std::string header;
 
 
         double null_perm = 0.0;
-        
         int line_num = 0;
 
         int header_size = 9;
@@ -679,7 +678,8 @@ void MCSimulation::addSubstatesFromFiles()
                 break;
             }
 
-            if (!init){
+            // Check whether we need to add previous spheres as cell component
+            if (!init){ // first run: initialize first component at index 0 
                 current_cell.component_type_to_index.insert({component_type, component_type_index});
             }
             
@@ -689,13 +689,20 @@ void MCSimulation::addSubstatesFromFiles()
                     component_id != last_component_id
                     || component_type != last_component_type
                 ) {
+                    // set some variables for the diffusion simulation obstacle definition - where is this actualyl needed?
+                    current_cell_component.setDiffusion(diff_i, diff_e);
+                    current_cell_component.setPercolation(perm_);
                     current_cell.components.push_back(current_cell_component);
+                    current_cell_component = CellComponent();
                     component_type_index ++; 
+                    component_counter ++;
                 }
                 // add a new cell component type
                 if (component_type != last_component_type) {
                     current_cell.component_types.push_back(last_component_type);
                     current_cell.component_type_to_index.insert({component_type, component_type_index});
+                    current_cell.number_of_components_per_type.push_back(component_counter);
+                    component_counter = 0;
                 }
                        
                 // add a new cell 
@@ -703,77 +710,59 @@ void MCSimulation::addSubstatesFromFiles()
                     cell_id != last_cell_id
                     || cell_type != last_cell_type
                 ) {
+                    // set some variables for the diffusion simulation obstacle definition  - where is this actualyl needed?
+                    current_cell.setDiffusion(diff_i, diff_e);
+                    current_cell.setPercolation(perm_);
                     current_substrate.cells.push_back(current_cell);
+                    current_cell = Cell();
                     cell_type_index ++; 
+                    cell_counter ++;
                 }
-                // add a new cell type 
+                // add a new cell type to substrate
                 if (cell_type != last_cell_type) {
                     current_substrate.cell_types.push_back(cell_type);
                     current_substrate.cell_type_to_index.insert({cell_type, cell_type_index});
+                    current_substrate.number_of_cells_per_type.push_back(cell_counter);
+                    cell_counter = 0;
                 }
             }
             
+            // read next sphere
             current_sphere.center = Eigen::Vector3d(x,y,z);
             current_sphere.radius = rout;
+            current_sphere.inner_radius = rin;
+            current_sphere.outer_radius = rout;
             current_cell_component.spheres.push_back(current_sphere);
 
-            init = true;
+            if (!init) {init = true;}
 
             last_component_id = component_id;
             last_component_type = component_type;
 
             last_cell_id = cell_id;
             last_cell_type = cell_type;
-            
-
-            /*if (component.find("soma") != std::string::npos) {
-                // Save previous glial cell if it exists
-                if (glial_initialized) {
-                    current_glial.setDiffusion(diff_i, diff_e);
-                    current_glial.setPercolation(perm_);
-                    current_glial.set_up_glialcell(current_processes);
-                    dynamicsEngine->glials_list.push_back(current_glial);
-                    current_processes.clear();
-                    sphere_id = 0;
-                }
-
-                Sphere soma(int(sphere_id), int(cell_id), Eigen::Vector3d(x, y, z), r, 1, int(component_id));
-                soma.setDiffusion(diff_i, diff_e);
-                soma.setPercolation(perm_);
-                current_glial = Glial(cell_id, soma);
-                current_glial.processes.clear();
-                glial_initialized = true;
-            } 
-            else if (component.find("branch") != std::string::npos) {
-                Sphere process(int(sphere_id), current_glial.id, Eigen::Vector3d(x, y, z), r, 1, int(component_id));
-                process.setDiffusion(diff_i, diff_e);
-                process.setPercolation(perm_);
-                current_processes.push_back(process);
-            }
-            sphere_id += 1;*/
         }
-        /*
-        // Save the last glial cell, if any
-        if (glial_initialized) {
-            current_glial.setDiffusion(diff_i, diff_e);
-            current_glial.setPercolation(perm_);
-            current_glial.set_up_glialcell(current_processes);
-            dynamicsEngine->glials_list.push_back(current_glial);
-        }*/
-        
         in.close();
-    
-    /*
-    // keep only first glial cell
-    if (dynamicsEngine->glials_list.size() > 2) {
-        std::cout << "\033[1;33m[Warning]\033[0m More than one glial cell found, keeping only the first one." << std::endl;
-        dynamicsEngine->glials_list.resize(2);
-    }
-    */
+
+        if (!init){
+            // adding the last read cell component & cell
+            // add last cell component
+            current_cell.components.push_back(current_cell_component);
+            // add last cell component type
+            current_cell.component_types.push_back(last_component_type);
+            current_cell.component_type_to_index.insert({component_type, component_type_index});        
+            // add last cell 
+            current_substrate.cells.push_back(current_cell);
+            // add last cell type to substrate
+            current_substrate.cell_types.push_back(cell_type);
+            current_substrate.cell_type_to_index.insert({cell_type, cell_type_index});
+        }
+
+        current_substrate.fillSphereMap();
+        
+        dynamicsEngine->substrates.push_back(current_substrate);
     }
     std::cout << "Number of substrates: " << dynamicsEngine->substrates.size() << std::endl;
-
-
 }
 
 void MCSimulation::addCylindersObstaclesFromFiles()

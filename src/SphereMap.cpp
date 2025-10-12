@@ -43,13 +43,13 @@ bool SphereMap::add_sphere_to_entry(int x, int y, int z, const SphereIds& ids, b
 }
 
 bool SphereMap::add_sphere_to_entry(int x, int y, int z,
-                           int neuron_id,
-                           int dendrite_id,
-                           int subbranch_id,
+                           int cell_type,
+                           int cell_id,
+                           int component_type,
+                           int component_id,
                            int sphere_id,
-                           int spine_index,
                            bool no_duplicates) {
-    SphereIds ids{neuron_id, dendrite_id, subbranch_id, sphere_id, spine_index};
+    SphereIds ids{cell_type, cell_id, component_type, component_id, sphere_id};
     return add_sphere_to_entry(x, y, z, ids, no_duplicates);
 }
 /*
@@ -127,32 +127,23 @@ bool SphereMap::add_sphere(Sphere& sphere,  SphereIds& ids){
     return success;
 }
 
-bool SphereMap::add_sphere(Sphere& sphere,  int neuron_id, int dendrite_id, int subbranch_id, int spine_index, int sphere_id){
+bool SphereMap::add_sphere(
+    Sphere& sphere,  
+    int cell_type, 
+    int cell_id, 
+    int component_type, 
+    int component_id, 
+    int sphere_id
+){
     SphereIds sph_ids;
-    sph_ids.neuron_id = neuron_id;
-    sph_ids.dendrite_id = dendrite_id;
-    sph_ids.subbranch_id = subbranch_id;
-    sph_ids.spine_index = spine_index;
+    sph_ids.cell_type = cell_type;
+    sph_ids.cell_id = cell_id;
+    sph_ids.component_type = component_type;
+    sph_ids.component_id = component_id;
     sph_ids.sphere_id = sphere_id;
     return add_sphere(sphere,sph_ids);
 }
 
-
-bool SphereMap::add_process(CellComponent& cell_process, int spine_index){
-    bool success = true;
-    SphereIds sph_ids;
-    // these three lines are currently creating errors, needed later on 
-    //sph_ids.neuron_id = cell_process.neuron_id;
-    //sph_ids.dendrite_id = cell_process.dendrite_id;
-    sph_ids.spine_index = spine_index;
-    //sph_ids.subbranch_id = cell_process.subbranch_id; 
-
-    for (uint i = 0; i < cell_process.spheres.size(); i++){
-        sph_ids.sphere_id = i;
-        success = success && add_sphere(cell_process.spheres[i], sph_ids);
-    }
-    return success;
-}
 
 std::vector<int> SphereMap::get_number_of_entries(Sphere & sphere){
     std::vector<int> number_of_entries;

@@ -7,20 +7,20 @@
 
 
 struct SphereIds {
-    int neuron_id;
-    int dendrite_id;
-    int subbranch_id;
-    int sphere_id;
-    int spine_index;
+    int cell_type;// int according to the cell types in the vector stored in the substrate
+    int cell_id;
+    int component_type; // int, similar to cell_type
+    int component_id;
+    int sphere_id; // vector index of spheres
 };
 
 // Exact, order-sensitive equality
 inline bool operator==(const SphereIds& a, const SphereIds& b) {
-    return a.neuron_id   == b.neuron_id
-        && a.dendrite_id == b.dendrite_id
-        && a.subbranch_id== b.subbranch_id
-        && a.sphere_id   == b.sphere_id
-        && a.spine_index    == b.spine_index;
+    return a.cell_type   == b.cell_type
+        && a.cell_id == b.cell_id
+        && a.component_type== b.component_type
+        && a.component_id   == b.component_id
+        && a.sphere_id    == b.sphere_id;
 }
 
 class SphereMap {
@@ -40,11 +40,11 @@ public:
 
     // Convenience overload with named fields
     bool add_sphere_to_entry(int x, int y, int z,
-                    int neuron_id,
-                    int dendrite_id,
-                    int subbranch_id,
+                    int cell_type,
+                    int cell_id,
+                    int component_type,
+                    int component_id,
                     int sphere_id,
-                    int spine_index,
                     bool no_duplicates = true);
 
     // Remove a sphere by exact value (order-sensitive). Returns true if removed.
@@ -63,14 +63,17 @@ public:
     // Utilities per entry.
     void clear_entry(int x, int y, int z);
     void reserve_entry(int x, int y, int z, std::size_t n_spheres);
-
-    // Add cell process to SphereMap.
-    bool add_process(CellComponent& cell_process, int spine_index);
     
     // Add sphere object to SphereMap
     bool add_sphere(Sphere& sphere,  SphereIds& ids);
     // Add sphere object to Spheremap, with named ids 
-    bool add_sphere(Sphere& sphere,  int neuron_id, int dendrite_id, int subbranch_id, int spine_index, int sphere_id);
+    bool add_sphere(
+        Sphere& sphere,  
+        int cell_type, 
+        int cell_id, 
+        int component_type, 
+        int component_id, 
+        int sphere_id);
 
     // Returns a vectors of sphere IDs that potentially overlap with a given sphere.
     std::vector<SphereIds> get_potentially_overlapping_spheres_ids(Sphere & sphere);

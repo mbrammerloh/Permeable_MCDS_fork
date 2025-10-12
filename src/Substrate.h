@@ -23,6 +23,7 @@ class Substrate: public Obstacle
     public:
         vector<string> cell_types;
         map<string, int> cell_type_to_index;
+        vector<int> number_of_cells_per_type;
         vector<Cell> cells;
         SphereMap spheremap;
 
@@ -36,6 +37,10 @@ class Substrate: public Obstacle
             const string &cell_type, 
             const int &cell_index
         );
+
+        string cellTypeFromIndex(const int & index);
+
+        void fillSphereMap();
 };
 
 #endif

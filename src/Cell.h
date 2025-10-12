@@ -16,11 +16,12 @@
 
 using namespace std;
 
-class Cell
+class Cell: public Obstacle
 {
     public:
         vector<string> component_types;
         map<string, int> component_type_to_index;
+        vector <int> number_of_components_per_type;
         vector<CellComponent> components;
         string type;
 
