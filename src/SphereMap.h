@@ -27,7 +27,7 @@ inline bool operator==(const SphereIds& a, const SphereIds& b) {
 
 class SphereMap {
 public:
-    static constexpr int N = 5;
+    static constexpr int N = 100;
     vector<double> x0;
 
     SphereMap();
