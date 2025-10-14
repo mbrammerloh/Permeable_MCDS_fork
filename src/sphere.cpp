@@ -1,5 +1,6 @@
 #include "sphere.h"
 #include "constants.h"
+#include "obstacle.h"
 #include <Eigen/Dense>
 #include <iostream>
 
@@ -12,7 +13,7 @@ Sphere::Sphere()
 Sphere::~Sphere()
 {}
 
-Sphere::Sphere(const Sphere &sph)
+Sphere::Sphere(const Sphere &sph) : Obstacle()
 {
 
     center          = sph.center;
@@ -24,12 +25,12 @@ Sphere::Sphere(const Sphere &sph)
     object_id       = sph.object_id;
     object_type     = sph.object_type;
     branch_id       = sph.branch_id;
-    percolation = sph.percolation;
+    /*percolation = sph.percolation;
     prob_cross_e_i = sph.prob_cross_e_i;
     prob_cross_i_e = sph.prob_cross_i_e;
     diffusivity_i = sph.diffusivity_i;
     diffusivity_e = sph.diffusivity_e;
-    count_perc_crossings = sph.count_perc_crossings;
+    count_perc_crossings = sph.count_perc_crossings;*/
 
 }
 

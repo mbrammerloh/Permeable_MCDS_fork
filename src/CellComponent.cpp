@@ -3,6 +3,7 @@
 #include <Eigen/Geometry>
 #include <Eigen/Core>
 #include "constants.h"
+#include "obstacle.h"
 #include <numeric>
 #include <unordered_map>
 #include <map>
@@ -23,19 +24,19 @@ CellComponent::CellComponent()
 CellComponent::~CellComponent()
 {}
 
-CellComponent::CellComponent(const CellComponent &gl)
+CellComponent::CellComponent(const CellComponent &gl) : Obstacle()
 {
     id = gl.id;
     spheres = gl.spheres;
     begin = gl.begin;
     end = gl.end;
     grid = gl.grid;
-    percolation = gl.percolation;
-    prob_cross_e_i = gl.prob_cross_e_i;
-    prob_cross_i_e = gl.prob_cross_i_e;
-    diffusivity_i = gl.diffusivity_i;
-    diffusivity_e = gl.diffusivity_e;
-    count_perc_crossings = gl.count_perc_crossings;
+    //percolation = gl.percolation;
+    //prob_cross_e_i = gl.prob_cross_e_i;
+    //prob_cross_i_e = gl.prob_cross_i_e;
+    //diffusivity_i = gl.diffusivity_i;
+    //diffusivity_e = gl.diffusivity_e;
+    //count_perc_crossings = gl.count_perc_crossings;
 
 };
 

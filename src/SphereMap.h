@@ -5,6 +5,8 @@
 #include <cstddef>
 #include "CellComponent.h"
 
+using namespace std;
+
 
 struct SphereIds {
     int cell_type;// int according to the cell types in the vector stored in the substrate
@@ -26,13 +28,24 @@ inline bool operator==(const SphereIds& a, const SphereIds& b) {
 class SphereMap {
 public:
     static constexpr int N = 100;
+    vector<double> x0;
 
     SphereMap();
-    SphereMap(const std::vector<double>& voxel_size);
-    SphereMap(double vx, double vy, double vz);
+    SphereMap(const SphereMap &spm);
+    SphereMap(
+        const vector<double> &voxel_size, 
+        const vector<double> &x0
+    );
+    SphereMap(
+        double vx, double vy, double vz,
+        double x0, double y0, double z0
+    );
 
     // initialize the sphere map with a given voxel size.
-    void init(std::vector<double>& vox_sizes);
+    void init(
+        vector<double>& vox_sizes,
+        vector<double>& x0_origin
+    );
 
     // Add a sphere to the SphereMap. If no_duplicates is true,
     // the exact same SphereIds will not be added twice in the same entry.
@@ -54,15 +67,15 @@ public:
     bool contains_sphere(int x, int y, int z, const SphereIds& ids) const;
 
     // Number of spheres at an entry.
-    std::size_t sphere_count(int x, int y, int z) const;
+    size_t sphere_count(int x, int y, int z) const;
 
     // Access all spheres at an entry.
-    const std::vector<SphereIds>& spheres(int x, int y, int z) const;
-    std::vector<SphereIds>&       spheres(int x, int y, int z);
+    const vector<SphereIds>& spheres(int x, int y, int z) const;
+    vector<SphereIds>&       spheres(int x, int y, int z);
 
     // Utilities per entry.
     void clear_entry(int x, int y, int z);
-    void reserve_entry(int x, int y, int z, std::size_t n_spheres);
+    void reserve_entry(int x, int y, int z, size_t n_spheres);
     
     // Add sphere object to SphereMap
     bool add_sphere(Sphere& sphere,  SphereIds& ids);
@@ -76,24 +89,24 @@ public:
         int sphere_id);
 
     // Returns a vectors of sphere IDs that potentially overlap with a given sphere.
-    std::vector<SphereIds> get_potentially_overlapping_spheres_ids(Sphere & sphere);
-    std::vector<int> get_number_of_entries(Sphere & sphere);
+    vector<SphereIds> get_potentially_overlapping_spheres_ids(Sphere & sphere);
+    vector<int> get_number_of_entries(Sphere & sphere);
 
 
 private:
     struct Entry {
-        std::vector<SphereIds> spheres;
+        vector<SphereIds> spheres;
     };
 
-    static std::size_t lin(int x, int y, int z);
+    static size_t lin(int x, int y, int z);
 
-    const std::vector<SphereIds>&   entry_spheres(int x, int y, int z) const;
-    std::vector<SphereIds>&         entry_spheres(int x, int y, int z);
+    const vector<SphereIds>&   entry_spheres(int x, int y, int z) const;
+    vector<SphereIds>&         entry_spheres(int x, int y, int z);
 
-    std::vector<int> get_index_of_point(Eigen::Vector3d & point);
-    bool is_sphere_in_map_voxel(std::vector<int>& indices, Eigen::Vector3d& sphere_center, double & radius);
+    vector<int> get_index_of_point(Eigen::Vector3d & point);
+    bool is_sphere_in_map_voxel(vector<int>& indices, Eigen::Vector3d& sphere_center, double & radius);
 
-    std::vector<Entry> entries_;
-    std::vector<double> voxel_size_;
-    std::vector<double> step_size_; // defines step size of grid in µm in x, y, z directions
+    vector<Entry> entries_;
+    vector<double> voxel_size_;
+    vector<double> step_size_; // defines step size of grid in µm in x, y, z directions
 };

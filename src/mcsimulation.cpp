@@ -647,13 +647,9 @@ void MCSimulation::addSubstatesFromFiles()
         string cell_type = "", component_type = "", last_cell_type ="",  last_component_type ="";
         std::string header;
 
-
-        double null_perm = 0.0;
-        int line_num = 0;
-
         int header_size = 9;
 
-        for(unsigned j = 0; j < header_size; j++){  
+        for(int j = 0; j < int(header_size); j++){  
             in >>header;
         } 
 
@@ -744,21 +740,29 @@ void MCSimulation::addSubstatesFromFiles()
         }
         in.close();
 
-        if (!init){
+        if (init){
             // adding the last read cell component & cell
             // add last cell component
+            current_cell_component.setDiffusion(diff_i, diff_e);
+            current_cell_component.setPercolation(perm_);
             current_cell.components.push_back(current_cell_component);
+            component_counter ++; // also the last one adds to the final count
             // add last cell component type
-            current_cell.component_types.push_back(last_component_type);
-            current_cell.component_type_to_index.insert({component_type, component_type_index});        
+            current_cell.component_types.push_back(component_type);
+            current_cell.component_type_to_index.insert({component_type, component_type_index});
+            current_cell.number_of_components_per_type.push_back(component_counter);
             // add last cell 
+            current_cell.setDiffusion(diff_i, diff_e);
+            current_cell.setPercolation(perm_);
             current_substrate.cells.push_back(current_cell);
+            cell_counter ++; // also the last one adds to the final count
             // add last cell type to substrate
             current_substrate.cell_types.push_back(cell_type);
             current_substrate.cell_type_to_index.insert({cell_type, cell_type_index});
+            current_substrate.number_of_cells_per_type.push_back(cell_counter);
         }
 
-        current_substrate.fillSphereMap();
+        current_substrate.createSphereMap();
         
         dynamicsEngine->substrates.push_back(current_substrate);
     }

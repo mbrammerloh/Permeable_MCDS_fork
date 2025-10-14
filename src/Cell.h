@@ -10,6 +10,7 @@
 #define CELL_H
 
 #include "CellComponent.h"
+#include "obstacle.h"
 #include <string>
 #include <vector>
 #include <map>
@@ -27,6 +28,7 @@ class Cell: public Obstacle
 
         Cell();
         ~Cell();
+        Cell(const Cell &cell);
 
         int getComponentTypeIndex(
             const string &component_type, 

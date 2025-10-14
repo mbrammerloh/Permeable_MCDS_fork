@@ -32,6 +32,7 @@ class Substrate: public Obstacle
         */
         Substrate();
         ~Substrate();
+        Substrate(const Substrate &sub);
 
         int getCellTypeIndex(
             const string &cell_type, 
@@ -40,7 +41,7 @@ class Substrate: public Obstacle
 
         string cellTypeFromIndex(const int & index);
 
-        void fillSphereMap();
+        void createSphereMap();
 };
 
 #endif
